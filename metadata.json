@@ -1,0 +1,6 @@
+{
+  "name": "APEX DROP 30",
+  "description": "30 kişilik 3D Villa aksiyon nişancı arenası ve bağımsız /kontrol yönetim uygulaması.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

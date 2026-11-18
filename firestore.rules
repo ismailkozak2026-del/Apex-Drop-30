@@ -1,0 +1,207 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'ismailkozak2026@gmail.com';
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isValidPlayer(data) {
+      return data.keys().hasAll([
+        'uid', 'displayName', 'email', 'photoURL', 'status', 'muted',
+        'kickReason', 'banReason', 'online', 'wins', 'kills', 'headshots',
+        'matchesPlayed', 'totalDamage', 'lastSeen', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'uid', 'displayName', 'email', 'photoURL', 'status', 'muted',
+        'kickReason', 'banReason', 'online', 'wins', 'kills', 'headshots',
+        'matchesPlayed', 'totalDamage', 'lastSeen', 'createdAt', 'updatedAt'
+      ])
+      && isValidId(data.uid)
+      && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80
+      && data.email is string && data.email.size() <= 160
+      && data.photoURL is string && data.photoURL.size() <= 500
+      && data.status in ['active', 'kicked', 'banned']
+      && data.muted is bool
+      && data.kickReason is string && data.kickReason.size() <= 200
+      && data.banReason is string && data.banReason.size() <= 200
+      && data.online is bool
+      && data.wins is int && data.wins >= 0 && data.wins <= 1000000
+      && data.kills is int && data.kills >= 0 && data.kills <= 10000000
+      && data.headshots is int && data.headshots >= 0 && data.headshots <= 10000000
+      && data.matchesPlayed is int && data.matchesPlayed >= 0 && data.matchesPlayed <= 1000000
+      && data.totalDamage is int && data.totalDamage >= 0 && data.totalDamage <= 1000000000
+      && data.lastSeen is timestamp
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidGameConfig(data) {
+      return data.keys().hasAll([
+        'maintenanceMode', 'maintenanceMessage', 'announcement',
+        'twoShotKillEnabled', 'headshotInstantKillEnabled', 'doubleJumpJetpackEnabled',
+        'startingHp', 'startingShield', 'zoneShrinkSpeed', 'botAggression',
+        'updatedAt', 'updatedBy'
+      ])
+      && data.keys().hasOnly([
+        'maintenanceMode', 'maintenanceMessage', 'announcement',
+        'twoShotKillEnabled', 'headshotInstantKillEnabled', 'doubleJumpJetpackEnabled',
+        'startingHp', 'startingShield', 'zoneShrinkSpeed', 'botAggression',
+        'updatedAt', 'updatedBy'
+      ])
+      && data.maintenanceMode is bool
+      && data.maintenanceMessage is string && data.maintenanceMessage.size() <= 300
+      && data.announcement is string && data.announcement.size() <= 300
+      && data.twoShotKillEnabled is bool
+      && data.headshotInstantKillEnabled is bool
+      && data.doubleJumpJetpackEnabled is bool
+      && data.startingHp is number && data.startingHp >= 50 && data.startingHp <= 300
+      && data.startingShield is number && data.startingShield >= 0 && data.startingShield <= 200
+      && data.zoneShrinkSpeed is number && data.zoneShrinkSpeed >= 0.3 && data.zoneShrinkSpeed <= 3.0
+      && data.botAggression in ['low', 'normal', 'hard']
+      && data.updatedAt is timestamp
+      && data.updatedBy is string && data.updatedBy.size() <= 160;
+    }
+
+    function isValidAdminLog(data) {
+      return data.keys().hasAll([
+        'action', 'targetUid', 'targetName', 'reason', 'details', 'adminEmail', 'createdAt'
+      ])
+      && data.keys().hasOnly([
+        'action', 'targetUid', 'targetName', 'reason', 'details', 'adminEmail', 'createdAt'
+      ])
+      && data.action in [
+        'kick', 'ban', 'unban', 'mute', 'unmute',
+        'reset_stats', 'delete_player', 'update_config', 'reset_config'
+      ]
+      && data.targetUid is string && data.targetUid.size() >= 1 && data.targetUid.size() <= 128
+      && data.targetName is string && data.targetName.size() >= 1 && data.targetName.size() <= 120
+      && data.reason is string && data.reason.size() <= 300
+      && data.details is string && data.details.size() <= 500
+      && data.adminEmail is string && data.adminEmail.size() <= 160
+      && data.createdAt is timestamp;
+    }
+
+    match /players/{playerId} {
+      allow get: if isValidId(playerId) && (isOwner(playerId) || isAdmin());
+      allow list: if isAdmin();
+
+      allow create: if isValidId(playerId) && isVerifiedUser() && isValidPlayer(incoming()) && (
+        isAdmin() || (
+          isOwner(playerId)
+          && incoming().uid == request.auth.uid
+          && incoming().email == request.auth.token.email
+          && incoming().status == 'active'
+          && incoming().muted == false
+          && incoming().kickReason == ''
+          && incoming().banReason == ''
+          && incoming().wins == 0
+          && incoming().kills == 0
+          && incoming().headshots == 0
+          && incoming().matchesPlayed == 0
+          && incoming().totalDamage == 0
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && incoming().lastSeen == request.time
+        )
+      );
+
+      allow update: if isValidId(playerId) && isVerifiedUser() && isValidPlayer(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            isOwner(playerId)
+            && existing().status != 'banned'
+            && (
+              (
+                incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'online', 'lastSeen', 'updatedAt'])
+                && incoming().lastSeen == request.time
+              )
+              ||
+              (
+                existing().status == 'kicked'
+                && incoming().status == 'active'
+                && incoming().kickReason == ''
+                && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'kickReason', 'online', 'lastSeen', 'updatedAt'])
+                && incoming().lastSeen == request.time
+              )
+              ||
+              (
+                existing().status == 'active'
+                && incoming().diff(existing()).affectedKeys().hasOnly(['wins', 'kills', 'headshots', 'matchesPlayed', 'totalDamage', 'online', 'lastSeen', 'updatedAt'])
+                && incoming().lastSeen == request.time
+                && incoming().wins >= existing().wins
+                && incoming().wins <= existing().wins + 1
+                && incoming().kills >= existing().kills
+                && incoming().kills <= existing().kills + 35
+                && incoming().headshots >= existing().headshots
+                && incoming().headshots <= existing().headshots + 35
+                && incoming().matchesPlayed == existing().matchesPlayed + 1
+                && incoming().totalDamage >= existing().totalDamage
+                && incoming().totalDamage <= existing().totalDamage + 25000
+              )
+            )
+          )
+        );
+
+      allow delete: if isValidId(playerId) && isAdmin();
+    }
+
+    match /game_config/{configId} {
+      allow get: if isValidId(configId) && configId == 'live';
+      allow list: if isAdmin();
+      allow create, update: if isValidId(configId) && configId == 'live'
+        && isAdmin()
+        && isValidGameConfig(incoming())
+        && incoming().updatedAt == request.time
+        && incoming().updatedBy == request.auth.token.email;
+      allow delete: if false;
+    }
+
+    match /admin_logs/{logId} {
+      allow get: if isValidId(logId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(logId)
+        && isAdmin()
+        && isValidAdminLog(incoming())
+        && incoming().adminEmail == request.auth.token.email
+        && incoming().createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /test/{docId} {
+      allow get: if docId == 'connection';
+    }
+  }
+}

@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Chakra Petch', system-ui, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    margin: 0;
+  }
+
+  /* Main game viewport lock */
+  html.game-root,
+  body.game-root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: none;
+  }
+
+  /* Separate /kontrol app single-root vertical scrolling & text selection */
+  html.kontrol-root {
+    min-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  body.kontrol-root {
+    min-height: 100%;
+    overflow: visible;
+    touch-action: pan-y;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

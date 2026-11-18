@@ -1,0 +1,31 @@
+{
+  "id": "/kontrol",
+  "name": "APEX DROP 30 KONTROL",
+  "short_name": "KONTROL",
+  "description": "APEX DROP 30 uzaktan yönetici kontrol merkezi ve canlı ayar konsolu.",
+  "start_url": "/kontrol",
+  "scope": "/kontrol",
+  "display": "standalone",
+  "theme_color": "#0284c7",
+  "background_color": "#040d1a",
+  "icons": [
+    {
+      "src": "/kontrol-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/kontrol-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/kontrol-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

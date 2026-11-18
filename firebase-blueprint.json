@@ -1,0 +1,259 @@
+{
+  "entities": {
+    "Player": {
+      "title": "Player",
+      "description": "Registered APEX DROP 30 player profile, moderation status, and match statistics.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the player."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Player display name."
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 160,
+          "description": "Player email address (PII, restricted to owner and super admin)."
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Avatar image URL."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "kicked", "banned"],
+          "description": "Current moderation state."
+        },
+        "muted": {
+          "type": "boolean",
+          "description": "Whether player voice/chat is muted."
+        },
+        "kickReason": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Reason provided when player was kicked."
+        },
+        "banReason": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Reason provided when player was banned."
+        },
+        "online": {
+          "type": "boolean",
+          "description": "Live presence indicator."
+        },
+        "wins": {
+          "type": "integer",
+          "description": "Total Victory Royale count."
+        },
+        "kills": {
+          "type": "integer",
+          "description": "Total eliminations."
+        },
+        "headshots": {
+          "type": "integer",
+          "description": "Total headshot eliminations."
+        },
+        "matchesPlayed": {
+          "type": "integer",
+          "description": "Total matches played."
+        },
+        "totalDamage": {
+          "type": "integer",
+          "description": "Cumulative damage dealt."
+        },
+        "lastSeen": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last activity."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "email",
+        "photoURL",
+        "status",
+        "muted",
+        "kickReason",
+        "banReason",
+        "online",
+        "wins",
+        "kills",
+        "headshots",
+        "matchesPlayed",
+        "totalDamage",
+        "lastSeen",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "GameConfig": {
+      "title": "GameConfig",
+      "description": "Live game configuration broadcast from /kontrol to the main arena game.",
+      "type": "object",
+      "properties": {
+        "maintenanceMode": {
+          "type": "boolean",
+          "description": "Puts the main game into maintenance lock."
+        },
+        "maintenanceMessage": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Message shown to players during maintenance."
+        },
+        "announcement": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Live in-game announcement banner text."
+        },
+        "twoShotKillEnabled": {
+          "type": "boolean",
+          "description": "Enables the 2-hit elimination rule."
+        },
+        "headshotInstantKillEnabled": {
+          "type": "boolean",
+          "description": "Enables 1-shot headshot elimination and HEAD CAT banner."
+        },
+        "doubleJumpJetpackEnabled": {
+          "type": "boolean",
+          "description": "Enables double jump and jetpack glide."
+        },
+        "startingHp": {
+          "type": "number",
+          "description": "Starting health points (50-300)."
+        },
+        "startingShield": {
+          "type": "number",
+          "description": "Starting shield points (0-200)."
+        },
+        "zoneShrinkSpeed": {
+          "type": "number",
+          "description": "Zone shrink speed multiplier (0.3-3.0)."
+        },
+        "botAggression": {
+          "type": "string",
+          "enum": ["low", "normal", "hard"],
+          "description": "AI bot aggressiveness level."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last configuration change."
+        },
+        "updatedBy": {
+          "type": "string",
+          "maxLength": 160,
+          "description": "Admin email that updated the config."
+        }
+      },
+      "required": [
+        "maintenanceMode",
+        "maintenanceMessage",
+        "announcement",
+        "twoShotKillEnabled",
+        "headshotInstantKillEnabled",
+        "doubleJumpJetpackEnabled",
+        "startingHp",
+        "startingShield",
+        "zoneShrinkSpeed",
+        "botAggression",
+        "updatedAt",
+        "updatedBy"
+      ]
+    },
+    "AdminLog": {
+      "title": "AdminLog",
+      "description": "Immutable audit log entry for actions executed in /kontrol.",
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "kick",
+            "ban",
+            "unban",
+            "mute",
+            "unmute",
+            "reset_stats",
+            "delete_player",
+            "update_config",
+            "reset_config"
+          ],
+          "description": "Administrative action type."
+        },
+        "targetUid": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "Target player UID or config document ID."
+        },
+        "targetName": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Human-readable target label."
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Reason or summary entered by admin."
+        },
+        "details": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Additional structured summary."
+        },
+        "adminEmail": {
+          "type": "string",
+          "maxLength": 160,
+          "description": "Verified super admin email."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of audit event."
+        }
+      },
+      "required": [
+        "action",
+        "targetUid",
+        "targetName",
+        "reason",
+        "details",
+        "adminEmail",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/players/{playerId}": {
+      "schema": { "$ref": "#/entities/Player" },
+      "description": "Player profiles, moderation flags, and match statistics."
+    },
+    "/game_config/{configId}": {
+      "schema": { "$ref": "#/entities/GameConfig" },
+      "description": "Live gameplay configuration document (singleton ID: live)."
+    },
+    "/admin_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AdminLog" },
+      "description": "Immutable administrative audit trail."
+    }
+  }
+}
